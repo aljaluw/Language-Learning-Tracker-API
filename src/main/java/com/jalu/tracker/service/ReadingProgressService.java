@@ -1,9 +1,9 @@
 package com.jalu.tracker.service;
 
-import com.jalu.tracker.entity.Book;
-import com.jalu.tracker.entity.ReadingProgress;
-import com.jalu.tracker.repository.BookRepository;
-import com.jalu.tracker.repository.ReadingProgressRepository;
+import com.jalu.tracker.entity.MediaLog;
+import com.jalu.tracker.entity.MediaProgress;
+import com.jalu.tracker.repository.MediaLogRepository;
+import com.jalu.tracker.repository.MediaProgressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,35 +15,36 @@ import java.util.Optional;
 public class ReadingProgressService {
 
     @Autowired
-    private ReadingProgressRepository readingProgressRepository;
+    private MediaProgressRepository mediaProgressRepository;
 
     @Autowired
-    private BookRepository bookRepository;
+    private MediaLogRepository mediaLogRepository;
 
-    public String addProgress(Long bookId, int charactersRead) {
-        Optional<Book> bookOptional = bookRepository.findById(bookId);
+    public String addProgress(Long mediaId, Integer amount, LocalDate date, String comment) {
+        Optional<MediaLog> mediaOptional = mediaLogRepository.findById(mediaId);
 
-        if (bookOptional.isEmpty()) {
-            return "Book not found";
+        if (mediaOptional.isEmpty()) {
+            return "Media not found";
         }
 
-        Book book = bookOptional.get();
-        ReadingProgress progress = new ReadingProgress();
-        progress.setBook(book);
-        progress.setDate(LocalDate.now());
-        progress.setCharactersRead(charactersRead);
+        MediaLog mediaLog = mediaOptional.get();
+        MediaProgress progress = new MediaProgress();
+        progress.setMedia(mediaLog);
+        progress.setDate(date);
+        progress.setAmount(amount);
+        progress.setComment(comment);
 
-        readingProgressRepository.save(progress);
+        mediaProgressRepository.save(progress);
 
         return "Progress added successfully";
     }
 
-    public int getTotalCharactersRead(Long bookId, LocalDate startDate, LocalDate endDate) {
-        List<ReadingProgress> progressList = readingProgressRepository.findByBookIdAndDateBetween(bookId, startDate, endDate);
+    public int getTotalProgressAmount(Long bookId, LocalDate startDate, LocalDate endDate) {
+        List<MediaProgress> progressList = mediaProgressRepository.findByMediaIdAndDateBetween(bookId, startDate, endDate);
 
         // Sum up the characters read within the specified date range
         return progressList.stream()
-                .mapToInt(ReadingProgress::getCharactersRead)
+                .mapToInt(MediaProgress::getAmount)
                 .sum();
     }
 }
