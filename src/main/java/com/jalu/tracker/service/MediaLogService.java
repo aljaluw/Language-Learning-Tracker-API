@@ -1,6 +1,9 @@
 package com.jalu.tracker.service;
 
+import com.jalu.tracker.dto.MediaListDto;
 import com.jalu.tracker.dto.MediaLogProgressRequestDto;
+import com.jalu.tracker.dto.MediaResponseDto;
+import com.jalu.tracker.dto.ProgressLogsDto;
 import com.jalu.tracker.entity.MediaLog;
 import com.jalu.tracker.entity.MediaProgress;
 import com.jalu.tracker.repository.MediaLogRepository;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MediaLogService {
@@ -44,7 +48,6 @@ public class MediaLogService {
     @Transactional
     public String addMediaLog(MediaLogProgressRequestDto request) {
 
-        Integer amount = request.getAmount();;
         MediaLog mediaLog = mediaLogRepository.findByTitle(request.getTitle());
 
         // If media doesn't exist, create new
@@ -79,5 +82,56 @@ public class MediaLogService {
         mediaProgressRepository.save(mediaProgress);
 
         return "Media log and progress added successfully!";
+    }
+
+    public List<MediaResponseDto> getAllMedia() {
+        return mediaLogRepository.getAllMedia().stream().map(media -> {
+            MediaResponseDto dto = new MediaResponseDto();
+            dto.setMediaType(media.getMediaType());
+            dto.setTitle(media.getTitle());
+            dto.setTotalAmount(media.getTotalAmount());
+            dto.setUnit(media.getUnit());
+            dto.setStartDate(media.getStartDate());
+            dto.setComment(media.getComment());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    public List<MediaListDto> getMediaList() {
+        return mediaLogRepository.getAllMedia().stream().map(media -> {
+            MediaListDto dto = new MediaListDto();
+            dto.setId(media.getId());
+            dto.setMediaType(media.getMediaType());
+            dto.setTitle(media.getTitle());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    public Optional<MediaResponseDto> getMedia(Long id) {
+        return mediaLogRepository.findById(id).map(media -> {
+            MediaResponseDto dto = new MediaResponseDto();
+            dto.setMediaType(media.getMediaType());
+            dto.setTitle(media.getTitle());
+            dto.setTotalAmount(media.getTotalAmount());
+            dto.setUnit(media.getUnit());
+            dto.setStartDate(media.getStartDate());
+            dto.setComment(media.getComment());
+            return dto;
+        });
+    }
+
+    public List<ProgressLogsDto> getProgressLogs() {
+        return mediaProgressRepository.getAllMediaProgressWithMediaLog().stream().map(result -> {
+            MediaProgress mediaProgress = (MediaProgress) result[0];
+            MediaLog mediaLog = (MediaLog) result[1];
+
+            ProgressLogsDto dto = new ProgressLogsDto();
+            dto.setDate(mediaProgress.getDate());
+            dto.setMediaType(mediaLog.getMediaType());
+            dto.setTitle(mediaLog.getTitle());
+            dto.setAmount(mediaProgress.getAmount());
+            dto.setUnit(mediaLog.getUnit());
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
